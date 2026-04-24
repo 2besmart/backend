@@ -1,4 +1,5 @@
 require("dotenv").config();
+const nodemailer = require("nodemailer");
 const express = require("express");
 ///const fetch = require("node-fetch");
 const cors = require("cors");
@@ -35,6 +36,37 @@ const path = require("path");
 app.get("/download-word", (req, res) => {
     const filePath = path.join(__dirname, "files", "document.docx");
     res.download(filePath);
+});
+
+app.post("/send-mail", async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+        
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER,
+            subject: "Mesaj nou de pe site",
+            text: `
+            Nume: ${name}
+            Email: ${email}
+            Subiect: ${subject}
+            Mesaj: ${message}
+            `
+        });
+        
+        res.json({ success: true });
+        
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running"));
