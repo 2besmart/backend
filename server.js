@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 ///const fetch = require("node-fetch");
 const cors = require("cors");
@@ -17,8 +18,8 @@ app.post("/run", async (req, res) => {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            clientId: "b612e4cac0bea145b892d33726ad23b8",
-            clientSecret: "2fa1dc587f1fd055b77ab06341b83daf02c041c93b65635d5ef21c8de4d43d0a",
+            clientId: process.env.CLIENT_ID,
+            clientSecret: process.env.CLIENT_SECRET,
             script: script,
             stdin: input,
             language: "cpp17",
@@ -35,6 +36,5 @@ app.get("/download-word", (req, res) => {
     const filePath = path.join(__dirname, "files", "document.docx");
     res.download(filePath);
 });
-app.listen(3000, () => {
-    console.log("Server pornit pe http://localhost:3000");
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running"));
