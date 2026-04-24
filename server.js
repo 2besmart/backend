@@ -3,23 +3,21 @@ const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const path = require("path");
+const nodemailer = require("nodemailer");
 
 const app = express();
 
-// -------------------- MIDDLEWARE --------------------
 app.use(express.json());
 
-// CORS (fix pentru Netlify + Render)
 app.use(cors({
     origin: "https://printreadevarsiiluzie.netlify.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
 }));
 
-// -------------------- JDoodle RUN API --------------------
 app.post("/run", async (req, res) => {
     try {
-        const fetch = global.fetch; // Node 18+ / Render
+        const fetch = global.fetch;
 
         const { script, input } = req.body;
 
@@ -46,45 +44,51 @@ app.post("/run", async (req, res) => {
     }
 });
 
-// -------------------- DOWNLOAD FILE --------------------
+
 app.get("/download-word", (req, res) => {
     const filePath = path.join(__dirname, "files", "document.docx");
     res.download(filePath);
 });
+app.get("/download-pdf", (req, res) => {
+    const filePath = path.join(__dirname, "files", "prezentare.pdf");
+    res.download(filePath);
+});
 
-// -------------------- SEND EMAIL --------------------
-app.post("/send-mail", async (req, res) => {
-    try {
-        const { name, email, subject, message } = req.body;
+app.use(cors());
+app.use(express.json());
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
-            subject: subject || "Mesaj nou de pe site",
-            text: `
-Nume: ${name}
-Email: ${email}
-Subiect: ${subject}
-Mesaj: ${message}
-            `
-        });
-
-        res.json({ success: true });
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "oncsgraf@gmail.com",
+        pass: "chdf iqlx pzkr kqfs"
     }
 });
 
-// -------------------- START SERVER --------------------
+app.post("/send-email", async (req, res) => {
+    const { name, fromEmail, subject, message } = req.body;
+
+    const mailOptions = {
+        from: `"${name}" <${fromEmail}>`,
+        to: "oncsgraf@gmail.com",
+        subject: subject,
+        text: `
+Nume expeditor: ${name}
+Email expeditor: ${fromEmail}
+
+Mesaj:
+${message}
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false });
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
