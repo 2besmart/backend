@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-    origin: "https://printreadevarsiiluzie.netlify.app",
+    origin: "https://2besmart.netlify.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
 }));
