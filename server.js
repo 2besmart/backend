@@ -4,7 +4,6 @@ const cors = require("cors");
 const nodemailer = require("nodemailer");
 const path = require("path");
 const { GoogleGenAI } = require('@google/genai');
-
 const app = express();
 
 // Setăm middleware-urile o singură dată, la început
@@ -14,6 +13,22 @@ app.use(cors({
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
 }));
+const mongoose = require("mongoose");
+
+// Conectarea la MongoDB permanentă
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("Conectat cu succes la MongoDB Atlas!"))
+  .catch(err => console.error("Eroare de conexiune la MongoDB:", err));
+
+// Definirea structurii unui Review (Schema)
+const ReviewSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    text: { type: String, required: true },
+    rating: { type: Number, default: 5 },
+    date: { type: String, default: () => new Date().toLocaleDateString("ro-RO") }
+});
+
+const Review = mongoose.model("Review", ReviewSchema);
 
 // RUTA 1: Compilator JDoodle C++
 app.post("/run", async (req, res) => {
@@ -152,35 +167,39 @@ const saveReviews = (reviews) => {
     }
 };
 
-// RUTA A: Ia toate review-urile ca să le afișezi pe pagină
-app.get("/reviews", (req, res) => {
-    const reviews = readReviews();
-    res.json(reviews);
+// RUTA A: Ia toate review-urile din baza de date (sortate de la cele mai noi la cele mai vechi)
+app.get("/reviews", async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ _id: -1 }); 
+        res.json(reviews);
+    } catch (error) {
+        console.error("Eroare la aducerea review-urilor:", error);
+        res.status(500).json({ error: "Eroare de server" });
+    }
 });
 
-// RUTA B: Primește un review nou și îl salvează
-app.post("/reviews", (req, res) => {
-    const { name, text, rating } = req.body;
+// RUTA B: Salvează un review nou în baza de date permanentă
+app.post("/reviews", async (req, res) => {
+    try {
+        const { name, text, rating } = req.body;
 
-    if (!name || !text) {
-        return res.status(400).json({ error: "Numele și mesajul sunt obligatorii." });
+        if (!name || !text) {
+            return res.status(400).json({ error: "Numele și mesajul sunt obligatorii." });
+        }
+
+        const newReview = new Review({
+            name,
+            text,
+            rating: Number(rating) || 5
+        });
+
+        await newReview.save(); // Se salvează permanent în cloud-ul MongoDB
+
+        res.json({ success: true, review: newReview });
+    } catch (error) {
+        console.error("Eroare la salvarea review-ului:", error);
+        res.status(500).json({ error: "Nu s-a putut salva review-ul." });
     }
-
-    const reviews = readReviews();
-    
-    // Creăm obiectul pentru review-ul nou
-    const newReview = {
-        id: Date.now(), // ID unic bazat pe timp
-        name,
-        text,
-        rating: Number(rating) || 5,
-        date: new Date().toLocaleDateString("ro-RO")
-    };
-
-    reviews.unshift(newReview); // Adaugă review-ul nou la începutul listei
-    saveReviews(reviews);
-
-    res.json({ success: true, review: newReview });
 });
 
 // Pornire Server
