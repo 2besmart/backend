@@ -124,6 +124,65 @@ app.post('/generate-quiz', async (req, res) => {
     }
 });
 
+const fs = require("fs");
+const REVIEWS_FILE = path.join(__dirname, "reviews.json");
+
+// Funcție ajutătoare: Citește review-urile din fișier
+const readReviews = () => {
+    try {
+        if (!fs.existsSync(REVIEWS_FILE)) {
+            // Dacă fișierul nu există, îl creăm gol
+            fs.writeFileSync(REVIEWS_FILE, JSON.stringify([]));
+            return [];
+        }
+        const data = fs.readFileSync(REVIEWS_FILE, "utf-8");
+        return JSON.parse(data || "[]");
+    } catch (error) {
+        console.error("Eroare la citirea review-urilor:", error);
+        return [];
+    }
+};
+
+// Funcție ajutătoare: Salvează review-urile în fișier
+const saveReviews = (reviews) => {
+    try {
+        fs.writeFileSync(REVIEWS_FILE, JSON.stringify(reviews, null, 2));
+    } catch (error) {
+        console.error("Eroare la salvarea review-urilor:", error);
+    }
+};
+
+// RUTA A: Ia toate review-urile ca să le afișezi pe pagină
+app.get("/reviews", (req, res) => {
+    const reviews = readReviews();
+    res.json(reviews);
+});
+
+// RUTA B: Primește un review nou și îl salvează
+app.post("/reviews", (req, res) => {
+    const { name, text, rating } = req.body;
+
+    if (!name || !text) {
+        return res.status(400).json({ error: "Numele și mesajul sunt obligatorii." });
+    }
+
+    const reviews = readReviews();
+    
+    // Creăm obiectul pentru review-ul nou
+    const newReview = {
+        id: Date.now(), // ID unic bazat pe timp
+        name,
+        text,
+        rating: Number(rating) || 5,
+        date: new Date().toLocaleDateString("ro-RO")
+    };
+
+    reviews.unshift(newReview); // Adaugă review-ul nou la începutul listei
+    saveReviews(reviews);
+
+    res.json({ success: true, review: newReview });
+});
+
 // Pornire Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
