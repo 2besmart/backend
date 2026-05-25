@@ -75,7 +75,7 @@ const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: "oncsgraf@gmail.com",
-        pass: process.env.EMAIL_PASS // <-- securizat!
+        pass: process.env.EMAIL_PASS 
     }
 });
 
@@ -84,9 +84,10 @@ app.post("/send-email", async (req, res) => {
     const { name, fromEmail, subject, message } = req.body;
 
     const mailOptions = {
-        from: `"${name}" <${fromEmail}>`,
-        to: "oncsgraf@gmail.com",
-        subject: subject,
+        from: `"Formular Contact - ${name}" <oncsgraf@gmail.com>`, // Trimis de tine
+        to: "oncsgraf@gmail.com",                                 // Către tine
+        replyTo: fromEmail, // <-- Când apeși "Reply" în Gmail, va răspunde automat vizitatorului!
+        subject: `[Contact Site] ${subject}`,
         text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
 
@@ -94,16 +95,18 @@ app.post("/send-email", async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.json({ success: true });
     } catch (error) {
-        console.error(error);
-        res.json({ success: false });
+        console.error("Eroare Nodemailer:", error);
+        res.json({ success: false, error: error.message }); // Trimite eroarea pentru debug
     }
 });
 
 // Configurare Google Gemini AI
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-const systemPrompt = `Ești un generator de quiz-uri. Primești un text și trebuie să generezi EXACT 10 întrebări de tip Adevărat/Fals în limba română sub formă de obiect JSON. 
-Fiecare întrebare trebuie să aibă textul întrebării, valoarea corectă și o explicație scurtă de ce este adevărat sau fals pe baza textului.
+const systemPrompt = `Ești un generator de quiz-uri. Îți voi da un text. Pe baza lui, generează 10 afirmații pentru un exercițiu de tip Adevărat/Fals.
+Reguli: Afirmațiile adevărate trebuie să redea fidel informația sau sensul textului, chiar dacă sunt reformulate, afirmațiile false trebuie să fie plauzibile, dar să conțină informații greșite, inversate sau inexistente în text,
+Nu face afirmațiile prea evidente, Folosește un limbaj clar și natural, în limba română, Nu adăuga informații din afara textului, Amestecă afirmațiile aleatoriu.
+Fiecare întrebare trebuie să aibă: id, textul afirmației, valoarea corectă (true/false), o explicație scurtă bazată pe text
 Formatul trebuie să fie STRICT o listă validă de obiecte JSON (fără caractere Markdown precum \`\`\`json la început):
 [
   {"id": 1, "text": "...", "correct": true, "explicatie": "..."},
@@ -146,7 +149,6 @@ const REVIEWS_FILE = path.join(__dirname, "reviews.json");
 const readReviews = () => {
     try {
         if (!fs.existsSync(REVIEWS_FILE)) {
-            // Dacă fișierul nu există, îl creăm gol
             fs.writeFileSync(REVIEWS_FILE, JSON.stringify([]));
             return [];
         }
