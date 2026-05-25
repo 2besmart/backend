@@ -1,4 +1,6 @@
 require("dotenv").config();
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
@@ -72,10 +74,20 @@ app.get("/download-pdf", (req, res) => {
 
 // Configurare Nodemailer (Securizată prin process.env)
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-        user: "oncsgraf@gmail.com",
-        pass: process.env.EMAIL_PASS 
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    connectionTimeout: 10000
+});
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("VERIFY ERROR:", error);
+    } else {
+        console.log("SMTP READY");
     }
 });
 
@@ -84,9 +96,9 @@ app.post("/send-email", async (req, res) => {
     const { name, fromEmail, subject, message } = req.body;
 
     const mailOptions = {
-        from: `"Formular Contact - ${name}" <oncsgraf@gmail.com>`, // Trimis de tine
-        to: "oncsgraf@gmail.com",                                 // Către tine
-        replyTo: fromEmail, // <-- Când apeși "Reply" în Gmail, va răspunde automat vizitatorului!
+        from: `"Formular Contact - ${name}" <oncsgraf@gmail.com>`,
+        to: "oncsgraf@gmail.com", 
+        replyTo: fromEmail, 
         subject: `[Contact Site] ${subject}`,
         text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
@@ -104,9 +116,9 @@ app.post("/send-email", async (req, res) => {
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const systemPrompt = `Ești un generator de quiz-uri. Îți voi da un text. Pe baza lui, generează 10 afirmații pentru un exercițiu de tip Adevărat/Fals.
-Reguli: Afirmațiile adevărate trebuie să redea fidel informația sau sensul textului, chiar dacă sunt reformulate, afirmațiile false trebuie să fie plauzibile, dar să conțină informații greșite, inversate sau inexistente în text,
-Nu face afirmațiile prea evidente, Folosește un limbaj clar și natural, în limba română, Nu adăuga informații din afara textului, Amestecă afirmațiile aleatoriu.
-Fiecare întrebare trebuie să aibă: id, textul afirmației, valoarea corectă (true/false), o explicație scurtă bazată pe text
+Reguli: Fiecare afirmație trebuie să urmărească mai multe caractere. Afirmațiile adevărate trebuie să redea fidel informația sau sensul textului, chiar dacă sunt reformulate, Afirmațiile false trebuie să conțină informații greșite fie modificând din textul dat fie unele greșite inexistente în text,
+Folosește un limbaj clar și natural, în limba română, Nu adăuga informații din afara textului la afirmațiile adevarate, Amestecă afirmațiile aleatoriu , sa nu am ai mult de 2 afirmații de același fel unua după cealaltă.
+Fiecare afirmație trebuie să aibă: id, textul afirmației, valoarea corectă (true/false), o explicație scurtă bazată pe text
 Formatul trebuie să fie STRICT o listă validă de obiecte JSON (fără caractere Markdown precum \`\`\`json la început):
 [
   {"id": 1, "text": "...", "correct": true, "explicatie": "..."},
