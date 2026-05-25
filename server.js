@@ -1,6 +1,4 @@
 require("dotenv").config();
-const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first");
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
@@ -72,43 +70,36 @@ app.get("/download-pdf", (req, res) => {
     res.download(filePath);
 });
 
-// Configurare Nodemailer (Securizată prin process.env)
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: "gmail",
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    connectionTimeout: 10000
-});
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("VERIFY ERROR:", error);
-    } else {
-        console.log("SMTP READY");
+        user: "oncsgraf@gmail.com",
+        pass: process.env.EMAIL_PASS.
     }
 });
 
-// RUTA 4: Trimitere Email
 app.post("/send-email", async (req, res) => {
     const { name, fromEmail, subject, message } = req.body;
 
     const mailOptions = {
-        from: `"Formular Contact - ${name}" <oncsgraf@gmail.com>`,
-        to: "oncsgraf@gmail.com", 
-        replyTo: fromEmail, 
-        subject: `[Contact Site] ${subject}`,
-        text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
+        from: `"${name}" <${fromEmail}>`,
+        to: "oncsgraf@gmail.com",
+        subject: subject,
+        text: `
+Nume expeditor: ${name}
+Email expeditor: ${fromEmail}
+
+Mesaj:
+${message}
+        `
     };
 
     try {
         await transporter.sendMail(mailOptions);
         res.json({ success: true });
     } catch (error) {
-        console.error("Eroare Nodemailer:", error);
-        res.json({ success: false, error: error.message }); // Trimite eroarea pentru debug
+        console.error(error);
+        res.json({ success: false });
     }
 });
 
