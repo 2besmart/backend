@@ -17,8 +17,8 @@ const mongoose = require("mongoose");
 
 // Conectarea la MongoDB permanentă
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("Conectat cu succes la MongoDB Atlas!"))
-  .catch(err => console.error("Eroare de conexiune la MongoDB:", err));
+    .then(() => console.log("Conectat cu succes la MongoDB Atlas!"))
+    .catch(err => console.error("Eroare de conexiune la MongoDB:", err));
 
 // Definirea structurii unui Review (Schema)
 const ReviewSchema = new mongoose.Schema({
@@ -74,7 +74,7 @@ const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: "oncsgraf@gmail.com",
-        pass: process.env.EMAIL_PASS.
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -175,7 +175,7 @@ const saveReviews = (reviews) => {
 // RUTA A: Ia toate review-urile din baza de date (sortate de la cele mai noi la cele mai vechi)
 app.get("/reviews", async (req, res) => {
     try {
-        const reviews = await Review.find().sort({ _id: -1 }); 
+        const reviews = await Review.find().sort({ _id: -1 });
         res.json(reviews);
     } catch (error) {
         console.error("Eroare la aducerea review-urilor:", error);
