@@ -6,7 +6,6 @@ const path = require("path");
 const { GoogleGenAI } = require('@google/genai');
 const app = express();
 
-// Setăm middleware-urile o singură dată, la început
 app.use(express.json());
 app.use(cors({
     origin: "https://printreadevarsiiluzie.netlify.app",
@@ -15,12 +14,11 @@ app.use(cors({
 }));
 const mongoose = require("mongoose");
 
-// Conectarea la MongoDB permanentă
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("Conectat cu succes la MongoDB Atlas!"))
     .catch(err => console.error("Eroare de conexiune la MongoDB:", err));
 
-// Definirea structurii unui Review (Schema)
 const ReviewSchema = new mongoose.Schema({
     name: { type: String, required: true },
     text: { type: String, required: true },
@@ -85,13 +83,7 @@ app.post("/send-email", async (req, res) => {
         from: `"${name}" <${fromEmail}>`,
         to: "oncsgraf@gmail.com",
         subject: subject,
-        text: `
-Nume expeditor: ${name}
-Email expeditor: ${fromEmail}
-
-Mesaj:
-${message}
-        `
+        text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
 
     try {
@@ -103,12 +95,15 @@ ${message}
     }
 });
 
-// Configurare Google Gemini AI
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-const systemPrompt = `Ești un generator de quiz-uri. Îți voi da un text. Pe baza lui, generează 10 afirmații pentru un exercițiu de tip Adevărat/Fals.
-Reguli: Fiecare afirmație trebuie să urmărească mai multe caractere. Afirmațiile adevărate trebuie să redea fidel informația sau sensul textului, chiar dacă sunt reformulate, Afirmațiile false trebuie să conțină informații greșite fie modificând din textul dat fie unele greșite inexistente în text,
-Folosește un limbaj clar și natural, în limba română, Nu adăuga informații din afara textului la afirmațiile adevarate, Amestecă afirmațiile aleatoriu , sa nu am ai mult de 2 afirmații de același fel unua după cealaltă.
+const systemPrompt = `Ești un generator de quiz-uri. Îți voi da un text.  Sarcina ta este să citești cu atenție textul și să generezi exact 10 propoziții distincte pe baza lui.
+Urmează cu strictețe aceste reguli:
+1. Conținut: Fiecare propoziție trebuie să includă cât mai multe date, cifre, nume sau detalii din textul inițial.
+2. Amestec de adevăr/fals: Unele propoziții trebuie să fie complet ADEVĂRATE (să respecte fidel realitatea din text), iar altele FALSE (să modifice intenționat date, corelații sau fapte din text, dar păstrând cuvintele cheie). Ambele variante trebuie să aibă structuri sintactice și elemente de conectare diferite față de textul inițial.
+3. RESTRICȚIE DE LIMBAJ (FOARTE IMPORTANT): Atât în textul propozițiilor, cât și în cadrul explicațiilor, ESTE STRICT INTERZISĂ utilizarea unor expresii metatextuale precum: „în text”, „în fraza analizată”, „conform textului”, „conținutul indică”, „textul afirmă”, „potrivit informațiilor oferite”, „este prezentat ca fiind” sau orice altă formulare similară. Răspunde direct și faptic, ca și cum faptele din text ar fi realități absolute.
+4. Fiecare afirmație trebuie să urmărească mai multe caractere. 
+5. Amestecă afirmațiile aleatoriu , sa nu am ai mult de 2 afirmații de același fel unua după cealaltă.
+6. Nu adauga informatii adivarate in plus in propozitii.
 Fiecare afirmație trebuie să aibă: id, textul afirmației, valoarea corectă (true/false), o explicație scurtă bazată pe text
 Formatul trebuie să fie STRICT o listă validă de obiecte JSON (fără caractere Markdown precum \`\`\`json la început):
 [
@@ -163,7 +158,6 @@ const readReviews = () => {
     }
 };
 
-// Funcție ajutătoare: Salvează review-urile în fișier
 const saveReviews = (reviews) => {
     try {
         fs.writeFileSync(REVIEWS_FILE, JSON.stringify(reviews, null, 2));
@@ -172,7 +166,7 @@ const saveReviews = (reviews) => {
     }
 };
 
-// RUTA A: Ia toate review-urile din baza de date (sortate de la cele mai noi la cele mai vechi)
+// RUTA A: Ia toate review-urile din baza de date
 app.get("/reviews", async (req, res) => {
     try {
         const reviews = await Review.find().sort({ _id: -1 });
@@ -198,7 +192,7 @@ app.post("/reviews", async (req, res) => {
             rating: Number(rating) || 5
         });
 
-        await newReview.save(); // Se salvează permanent în cloud-ul MongoDB
+        await newReview.save();
 
         res.json({ success: true, review: newReview });
     } catch (error) {
@@ -207,7 +201,6 @@ app.post("/reviews", async (req, res) => {
     }
 });
 
-// Pornire Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("Server running on port " + PORT);
