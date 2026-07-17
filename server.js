@@ -1,4 +1,6 @@
 require("dotenv").config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
@@ -7,8 +9,22 @@ const { GoogleGenAI } = require('@google/genai');
 const app = express();
 
 app.use(express.json());
+const allowedOrigins = [
+    "http://localhost:3000" ,
+    "http://127.0.0.1:5500" ,
+    "https://2besmart.netlify.app"                 
+];
+
 app.use(cors({
-    origin: "https://printreadevarsiiluzie.netlify.app",
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error("Blocat de CORS: Această origine nu are acces."));
+        }
+    },
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
 }));
@@ -28,7 +44,6 @@ const ReviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model("Review", ReviewSchema);
 
-// RUTA 1: Compilator JDoodle C++
 app.post("/run", async (req, res) => {
     try {
         const fetch = global.fetch;
@@ -57,21 +72,10 @@ app.post("/run", async (req, res) => {
     }
 });
 
-// RUTELE 2 & 3: Descărcare fișiere
-app.get("/download-word", (req, res) => {
-    const filePath = path.join(__dirname, "files", "document.docx");
-    res.download(filePath);
-});
-
-app.get("/download-pdf", (req, res) => {
-    const filePath = path.join(__dirname, "files", "prezentare.pdf");
-    res.download(filePath);
-});
-
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "oncsgraf@gmail.com",
+        user: "2besmart.contact@gmail.com",
         pass: process.env.EMAIL_PASS
     }
 });
@@ -81,7 +85,7 @@ app.post("/send-email", async (req, res) => {
 
     const mailOptions = {
         from: `"${name}" <${fromEmail}>`,
-        to: "oncsgraf@gmail.com",
+        to: "2besmart.contact@gmail.com",
         subject: subject,
         text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
@@ -111,7 +115,6 @@ Formatul trebuie să fie STRICT o listă validă de obiecte JSON (fără caracte
   {"id": 2, "text": "...", "correct": false, "explicatie": "..."}
 ]`;
 
-// RUTA 5: Generator Quiz cu AI
 app.post('/generate-quiz', async (req, res) => {
     try {
         const { text } = req.body;
@@ -143,7 +146,7 @@ app.post('/generate-quiz', async (req, res) => {
 const fs = require("fs");
 const REVIEWS_FILE = path.join(__dirname, "reviews.json");
 
-// Funcție ajutătoare: Citește review-urile din fișier
+//Citește review-urile din fișier
 const readReviews = () => {
     try {
         if (!fs.existsSync(REVIEWS_FILE)) {
@@ -166,7 +169,7 @@ const saveReviews = (reviews) => {
     }
 };
 
-// RUTA A: Ia toate review-urile din baza de date
+//Ia toate review-urile din baza de date
 app.get("/reviews", async (req, res) => {
     try {
         const reviews = await Review.find().sort({ _id: -1 });
@@ -177,7 +180,7 @@ app.get("/reviews", async (req, res) => {
     }
 });
 
-// RUTA B: Salvează un review nou în baza de date permanentă
+// Salvează un review nou în baza de date permanentă
 app.post("/reviews", async (req, res) => {
     try {
         const { name, text, rating } = req.body;
@@ -198,6 +201,42 @@ app.post("/reviews", async (req, res) => {
     } catch (error) {
         console.error("Eroare la salvarea review-ului:", error);
         res.status(500).json({ error: "Nu s-a putut salva review-ul." });
+    }
+});
+
+
+const CounterSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    value: { type: Number, default: 0 }
+});
+
+const Counter = mongoose.model('Counter', CounterSchema);
+
+// incrementarea click-urilor în funcție de ID
+app.post('/api/increment-clicks/:buttonId', async (req, res) => {
+    const { buttonId } = req.params;
+    try {
+        const counter = await Counter.findOneAndUpdate(
+            { id: `click_${buttonId}` },
+            { $inc: { value: 1 } },
+            { new: true, upsert: true }
+        );
+        res.json({ success: true, value: counter.value });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/get-all-counters', async (req, res) => {
+    try {
+        const counters = await Counter.find();
+        const dataObj = {};
+        counters.forEach(c => {
+            dataObj[c.id] = c.value;
+        });
+        res.json(dataObj);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
