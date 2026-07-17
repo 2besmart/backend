@@ -72,18 +72,13 @@ app.post("/run", async (req, res) => {
     }
 });
 
+
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587, 
-    secure: false,        
-    family: 4,  
+    service: "gmail",
     auth: {
         user: "2besmart.contact@gmail.com",
         pass: process.env.EMAIL_PASS
     },
-    tls: {
-        rejectUnauthorized: false
-    }
 });
 
 app.post("/send-email", async (req, res) => {
