@@ -86,7 +86,7 @@ app.post("/send-email", async (req, res) => {
 
     const mailOptions = {
         from: `"${name}" <${fromEmail}>`,
-        to: "oncsgraf@gmail.com",
+        to: "2besmart.contact@gmail.com",
         subject: subject,
         text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
