@@ -99,7 +99,6 @@ app.post("/send-email", async (req, res) => {
     }
 });
 
-//Generator Quiz cu AI
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const systemPrompt = `Ești un generator de quiz-uri. Îți voi da un text.  Sarcina ta este să citești cu atenție textul și să generezi exact 10 propoziții distincte pe baza lui.
 Urmează cu strictețe aceste reguli:
