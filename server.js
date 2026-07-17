@@ -78,7 +78,7 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: "2besmart.contact@gmail.com",
         pass: process.env.EMAIL_PASS
-    },
+    }
 });
 
 app.post("/send-email", async (req, res) => {
@@ -86,7 +86,7 @@ app.post("/send-email", async (req, res) => {
 
     const mailOptions = {
         from: `"${name}" <${fromEmail}>`,
-        to: "2besmart.contact@gmail.com",
+        to: "oncsgraf@gmail.com",
         subject: subject,
         text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
     };
@@ -96,7 +96,7 @@ app.post("/send-email", async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error(error);
-        res.json({ success: false, error: error.message });
+        res.json({ success: false });
     }
 });
 
