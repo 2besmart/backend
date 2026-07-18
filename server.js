@@ -87,7 +87,7 @@ app.post('/send-email', (req, res) => {
     const { name, email, subject, message } = req.body;
 
     const mailOptions = {
-        from: '"2beSMART Contact" <2besmart.contact@gmail.com>',
+        from: '"2beSMART" <2besmart.contact@gmail.com>',
         replyTo: email,
         to: "2besmart.contact@gmail.com",
         subject,
