@@ -73,19 +73,22 @@ app.post("/run", async (req, res) => {
 });
 
 
-
+const transporter = nodemailer.createTransport({
+    host: "74.125.142.108", // Forțează IPv4 prin IP direct
+    port: 465, 
+    secure: true,        
+    auth: {
+        user: "2besmart.contact@gmail.com",
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false,
+        servername: "smtp.gmail.com" // Păstrează asta pentru validarea SSL Google
+    }
+});
 
 app.post("/send-email", async (req, res) => {
     const { name, fromEmail, subject, message } = req.body;
-
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        family: 4,
-        auth: {
-            user: "2besmart.contact@gmail.com",
-            pass: process.env.EMAIL_PASS
-        }
-    });
 
     const mailOptions = {
         from: `"${name}" <${fromEmail}>`,
