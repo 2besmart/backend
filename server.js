@@ -84,11 +84,11 @@ const transporter = nodemailer.createTransport({
 });
 
 app.post('/send-email', (req, res) => {
-    const { nume, email, subject, message } = req.body;
+    const { name, email, subject, message } = req.body;
 
     const mailOptions = {
         from: '"2beSMART Contact" <2besmart.contact@gmail.com>',
-        replyTo: fromEmail,
+        replyTo: email,
         to: "2besmart.contact@gmail.com",
         subject,
         text: `Nume: ${name}
