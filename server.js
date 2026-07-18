@@ -10,15 +10,15 @@ const app = express();
 
 app.use(express.json());
 const allowedOrigins = [
-    "http://localhost:3000" ,
-    "http://127.0.0.1:5500" ,
-    "https://2besmart.netlify.app"                 
+    "http://localhost:3000",
+    "http://127.0.0.1:5500",
+    "https://2besmart.netlify.app"
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        
+
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
@@ -73,16 +73,18 @@ app.post("/run", async (req, res) => {
 });
 
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: "2besmart.contact@gmail.com",
-        pass: process.env.EMAIL_PASS
-    }
-});
+
 
 app.post("/send-email", async (req, res) => {
     const { name, fromEmail, subject, message } = req.body;
+
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: "2besmart.contact@gmail.com",
+            pass: process.env.EMAIL_PASS
+        }
+    });
 
     const mailOptions = {
         from: `"${name}" <${fromEmail}>`,
