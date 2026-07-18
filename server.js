@@ -74,30 +74,28 @@ app.post("/run", async (req, res) => {
 
 
 const transporter = nodemailer.createTransport({
-    // Folosim IP-ul direct pentru a evita rezoluția DNS problematică pe IPv6
-    host: '74.125.140.108', // Acesta este unul dintre IP-urile IPv4 oficiale ale smtp.gmail.com
-    port: 465,
-    secure: true, 
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS  
-    },
-    tls: {
-        // Numele de server este obligatoriu aici pentru ca certificatul SSL să rămână valid
-        servername: 'smtp.gmail.com',
-        rejectUnauthorized: false 
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS
     }
 });
 
 app.post('/send-email', (req, res) => {
     const { nume, email, subject, message } = req.body;
 
-    // Detaliile email-ului care va fi trimis
     const mailOptions = {
-        from: email, 
-        to: '2besmart.contact@gmail.com',
-        subject: `${subject}`,
-        text: `Ai primit un mesaj nou de la: ${nume} (${email})\n\nMesaj:\n${message}`
+        from: '"2beSMART Contact" <2besmart.contact@gmail.com>',
+        replyTo: fromEmail,
+        to: "2besmart.contact@gmail.com",
+        subject,
+        text: `Nume: ${name}
+Email: ${fromEmail}
+
+Mesaj:
+${message}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
