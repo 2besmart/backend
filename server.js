@@ -80,6 +80,7 @@ app.post("/send-email", async (req, res) => {
 
     const transporter = nodemailer.createTransport({
         service: "gmail",
+        family: 4,
         auth: {
             user: "2besmart.contact@gmail.com",
             pass: process.env.EMAIL_PASS
