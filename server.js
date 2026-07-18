@@ -90,10 +90,9 @@ app.post('/send-email', (req, res) => {
         from: '"2beSMART Contact" <2besmart.contact@gmail.com>',
         replyTo: fromEmail,
         to: "2besmart.contact@gmail.com",
-        subject,
+        subject:  ${subject},
         text: `Nume: ${name}
-Email: ${fromEmail}
-
+Email: ${email}
 Mesaj:
 ${message}`
     };
