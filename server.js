@@ -74,12 +74,18 @@ app.post("/run", async (req, res) => {
 
 
 const transporter = nodemailer.createTransport({
-      host: "74.125.140.108", // smtp.gmail.com (IPv4)
-    port: 587,
-    secure: false,
+    // Folosim IP-ul direct pentru a evita rezoluția DNS problematică pe IPv6
+    host: '74.125.140.108', // Acesta este unul dintre IP-urile IPv4 oficiale ale smtp.gmail.com
+    port: 465,
+    secure: true, 
     auth: {
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS  
+    },
+    tls: {
+        // Numele de server este obligatoriu aici pentru ca certificatul SSL să rămână valid
+        servername: 'smtp.gmail.com',
+        rejectUnauthorized: false 
     }
 });
 
