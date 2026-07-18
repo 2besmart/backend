@@ -89,7 +89,7 @@ app.post('/send-email', (req, res) => {
         from: email, 
         to: '2besmart.contact@gmail.com',
         subject: `${subject}`,
-        text: `Ai primit un mesaj nou de la: ${nume} (${email})\n\nMesaj:\n${mesaj}`
+        text: `Ai primit un mesaj nou de la: ${nume} (${email})\n\nMesaj:\n${message}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
