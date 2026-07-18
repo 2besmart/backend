@@ -99,7 +99,10 @@ ${message}`
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.log(error);
+            console.error("SEND MAIL ERROR:");
+            console.error(error);
+            console.error(error.code);
+            console.error(error.response);
             return res.status(500).json({ status: 'error', message: 'Ceva nu a mers bine la trimitere.' });
         }
         console.log('Email trimis: ' + info.response);
