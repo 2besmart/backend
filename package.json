@@ -21,6 +21,7 @@
   "homepage": "https://github.com/2besmart/backend#readme",
   "dependencies": {
     "@google/genai": "^2.9.0",
+    "body-parser": "^2.3.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

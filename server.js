@@ -74,36 +74,32 @@ app.post("/run", async (req, res) => {
 
 
 const transporter = nodemailer.createTransport({
-    host: "74.125.142.108", // Forțează IPv4 prin IP direct
-    port: 465, 
-    secure: true,        
+    service: 'gmail',
     auth: {
-        user: "2besmart.contact@gmail.com",
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false,
-        servername: "smtp.gmail.com" // Păstrează asta pentru validarea SSL Google
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS  
     }
 });
 
-app.post("/send-email", async (req, res) => {
-    const { name, fromEmail, subject, message } = req.body;
+app.post('/send-email', (req, res) => {
+    const { nume, email, subject, message } = req.body;
 
+    // Detaliile email-ului care va fi trimis
     const mailOptions = {
-        from: `"${name}" <${fromEmail}>`,
-        to: "2besmart.contact@gmail.com",
-        subject: subject,
-        text: `Nume expeditor: ${name}\nEmail expeditor: ${fromEmail}\n\nMesaj:\n${message}`
+        from: email, 
+        to: '2besmart.contact@gmail.com',
+        subject: `${subject}`,
+        text: `Ai primit un mesaj nou de la: ${nume} (${email})\n\nMesaj:\n${mesaj}`
     };
 
-    try {
-        await transporter.sendMail(mailOptions);
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.json({ success: false });
-    }
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error);
+            return res.status(500).json({ status: 'error', message: 'Ceva nu a mers bine la trimitere.' });
+        }
+        console.log('Email trimis: ' + info.response);
+        res.status(200).json({ status: 'success', message: 'Email-ul a fost trimis cu succes!' });
+    });
 });
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
